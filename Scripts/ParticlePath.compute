@@ -1,0 +1,24 @@
+﻿// // Each #kernel tells which function to compile; you can have many kernels
+// #pragma kernel CSMain
+
+// // Create a RenderTexture with enableRandomWrite flag and set it
+// // with cs.SetTexture
+// RWTexture2D<float4> Result;
+// RWStructuredBuffer<VecMatPair> dataBuffer;
+
+
+// [numthreads(8,8,1)]
+// void CSMain (uint3 id : SV_DispatchThreadID)
+// {
+    
+//     Vector3 place = point - transform.position;
+//     place = Quaternion.Inverse(transform.rotation) * place;
+
+//     Vector3 temp = new Vector3(3*place.z*place.x,3*place.z*place.y,2*Mathf.Pow(place.z,2) - Mathf.Pow(place.x,2) - Mathf.Pow(place.y,2));
+//     float ot = (moment/(4*Mathf.PI*Mathf.Pow(place.magnitude,5)));
+//     /* return*/ (transform.rotation * (ot * temp));
+    
+//     Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    
+
+// }
