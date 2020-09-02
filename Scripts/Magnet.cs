@@ -19,25 +19,9 @@ public class Magnet : MonoBehaviour
             other.gameObject.GetComponent<Rigidbody>().AddForce(CalculateB_Field(other.transform.position) * Time.deltaTime);
         }
     }
-    private void OnTriggerExit(Collider other){
-        if (other.gameObject.GetComponent<VirtualParticle>() != null){
-            //DrawArrow.ForDebug(transform.position,other.transform.position - transform.position,new Color(1,0,0));
-            //other.gameObject.GetComponent<Particle>().Reset();
-        }   
-    }
-    public GameObject VirtualParticle;
-    void InitParticles(){
-        for(int angle = 0; angle<360;angle+=36){
-            float x = Mathf.Cos(angle * Mathf.PI / 180)* 1; //transform.localScale.x;
-            float y = Mathf.Sin(angle * Mathf.PI / 180)* 1; //transform.localScale.x;
-            GameObject Particle = Instantiate<GameObject>(VirtualParticle, this.transform) as GameObject;
-            Particle.transform.parent = this.transform;
-            Particle.GetComponent<VirtualParticle>().Init(new Vector3(x,y,1));
-    }}
 
     void Start(){
         EffectiveArea = GetComponent<SphereCollider>();
-        InitParticles();
     }
 
     public List<Vector3> CalculateB_Field(List<Vector3> at){
