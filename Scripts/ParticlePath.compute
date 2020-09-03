@@ -1,24 +1,65 @@
-﻿// // Each #kernel tells which function to compile; you can have many kernels
-// #pragma kernel CSMain
+﻿#pragma kernel ParticlePath
 
-// // Create a RenderTexture with enableRandomWrite flag and set it
-// // with cs.SetTexture
-// RWTexture2D<float4> Result;
-// RWStructuredBuffer<VecMatPair> dataBuffer;
+float SegmentSize; // Distance between recorded points
+int MagnetCount;
+StructuredBuffer<float3> magnetPositions;
+StructuredBuffer<float4> magnetRotations;
+StructuredBuffer<float> magnetMoments;
 
+RWStructuredBuffer<float3> spawnPoints;
 
-// [numthreads(8,8,1)]
-// void CSMain (uint3 id : SV_DispatchThreadID)
-// {
-    
-//     Vector3 place = point - transform.position;
-//     place = Quaternion.Inverse(transform.rotation) * place;
+RWStructuredBuffer<float3> paths;
+float magnitude(float3 vec){}
 
-//     Vector3 temp = new Vector3(3*place.z*place.x,3*place.z*place.y,2*Mathf.Pow(place.z,2) - Mathf.Pow(place.x,2) - Mathf.Pow(place.y,2));
-//     float ot = (moment/(4*Mathf.PI*Mathf.Pow(place.magnitude,5)));
-//     /* return*/ (transform.rotation * (ot * temp));
-    
-//     Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
-    
+// https://answers.unity.com/questions/372371/multiply-quaternion-by-vector3-how-is-done.html
+float3 rotateby(float4 quat, float3 vec){
+     float num = quat.x * 2.;
+     float num2 = quat.y * 2.;
+     float num3 = quat.z * 2.;
+     float num4 = quat.x * num;
+     float num5 = quat.y * num2;
+     float num6 = quat.z * num3;
+     float num7 = quat.x * num2;
+     float num8 = quat.x * num3;
+     float num9 = quat.y * num3;
+     float num10 = quat.w * num;
+     float num11 = quat.w * num2;
+     float num12 = quat.w * num3;
+     float3 result;
+     result.x = (1. - (num5 + num6)) * vec.x + (num7 - num12) * vec.y + (num8 + num11) * vec.z;
+     result.y = (num7 + num12) * vec.x + (1. - (num4 + num6)) * vec.y + (num9 - num10) * vec.z;
+     result.z = (num8 - num11) * vec.x + (num9 + num10) * vec.y + (1. - (num4 + num5)) * vec.z;
+     return result;}
 
-// }
+float4 inverse(float4 quat){return quat;}
+
+[numthreads(1024,1,1)]
+void ParticlePath (uint3 id : SV_DispatchThreadID)
+{
+    int step = 0; 
+    int index = 0;
+    float3 _point = spawnPoints[id.x];//[0][0];
+    float3 last_point = _point;
+    while (step <= 500){
+        // float3 forces = float3(0,0,0);
+        // for (int i = 0; i < MagnetCount; i++){
+        //     MagnetState mag = magnetStates[i];
+        //     if((mag.position - point_).magnitude < 1){
+        //         break;
+        //     }        
+        //     // Reverse Rotation o. the Magnet    
+        //     float3 place = point_ - mag.position;
+        //     place = rotateby(inverse(mag.rotation), place);
+        //     // Math Function 
+        //     float3 temp = float3(3*place.z*place.x,3*place.z*place.y,2*pow(place.z,2) - pow(place.x,2) - pow(place.y,2));
+        //     float ot = (mag.moment/(4*3.1495*pow(place.magnitude,5)));
+        //     // I figured out that notation quaternion * vector uses overloaded multiply operator 
+        //     // which incapsulate mathematical multiplying quaternion * vector * quaternion^(-1)
+        //     forces += rotateby(mag.rotation, mul(ot, temp)); 
+        // } 
+        // point_ += forces; // Apply Combined Force o. Magnets
+        // if (step % 50 == 0){}
+        spawnPoints[id.x + step] = float3(id.x,id.x,id.x) * step; //point_;last_point = point_;
+        step++;
+    }
+}
