@@ -42,8 +42,8 @@ public class MagnetManager : MonoBehaviour {
         VirtualParticles = GameObject.FindGameObjectsWithTag ("Particle");
     }
 
-    GameObject SpawnMagnet (Vector3 position) { }
-    GameObject SpawnVirtualParticle(Vector3 position) { }
+    //GameObject SpawnMagnet (Vector3 position) { }
+    //GameObject SpawnVirtualParticle(Vector3 position) { }
 
     Vector3[] GetParticleSpawnPoints () {
         Vector3[] Spawns = new Vector3[40];
@@ -128,7 +128,7 @@ public class MagnetManager : MonoBehaviour {
             if (i%maxSteps == 0){
                 paths[i] = spawns[index++];
             } else {
-                // NOTE: Only here cause I think itll prevent the crashing 
+                // ! Only here cause I think it'll prevent the crashing 
                 paths[i] = new Vector3(-1,-1,-1);
             }
         }
