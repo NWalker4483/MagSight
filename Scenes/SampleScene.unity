@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.44657826, g: 0.49641263, b: 0.57481676, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641275, b: 0.5748172, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -96,6 +96,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -127,11 +128,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2395077970225578757, guid: 9e492d36f2ab74b728e0220cbdff51aa,
-        type: 3}
-      propertyPath: m_Name
-      value: Magnet (1)
-      objectReference: {fileID: 0}
     - target: {fileID: 2395077970225578755, guid: 9e492d36f2ab74b728e0220cbdff51aa,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -187,6 +183,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2395077970225578757, guid: 9e492d36f2ab74b728e0220cbdff51aa,
+        type: 3}
+      propertyPath: m_Name
+      value: Magnet (1)
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9e492d36f2ab74b728e0220cbdff51aa, type: 3}
 --- !u!1 &381270081
@@ -234,8 +235,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   VirtualParticle: {fileID: 1433957354944353834, guid: 8877f50097ac945de8a586002b182573,
     type: 3}
-  shader: {fileID: 0}
-  ParticlePerMagnetTemp: 0
+  shader: {fileID: 7200000, guid: f3e17bcbbf1291e47b57a57c88b1c95e, type: 3}
+  maxSteps: 500
+  displacementPerStep: 0
+  use_gpu: 1
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -261,8 +264,9 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
   m_Enabled: 1
-  serializedVersion: 9
+  serializedVersion: 10
   m_Type: 1
+  m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
   m_Range: 10
@@ -417,11 +421,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2395077970225578757, guid: 9e492d36f2ab74b728e0220cbdff51aa,
-        type: 3}
-      propertyPath: m_Name
-      value: Magnet
-      objectReference: {fileID: 0}
     - target: {fileID: 2395077970225578755, guid: 9e492d36f2ab74b728e0220cbdff51aa,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -476,6 +475,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2395077970225578757, guid: 9e492d36f2ab74b728e0220cbdff51aa,
+        type: 3}
+      propertyPath: m_Name
+      value: Magnet
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9e492d36f2ab74b728e0220cbdff51aa, type: 3}

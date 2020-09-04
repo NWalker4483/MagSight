@@ -12,10 +12,11 @@ public class MagnetManager : MonoBehaviour {
     public int maxSteps = 500;
     [Range(1,10)]
     public float displacementPerStep;
+    public bool use_gpu = true;
 
     // Start is called before the first frame update
     void Start () {
-        if (SystemInfo.supportsComputeShaders) {
+        if (SystemInfo.supportsComputeShaders && use_gpu) {
             Debug.Log("Running on GPU");
         } else {
             Debug.Log("Running on CPU");
@@ -120,7 +121,8 @@ public class MagnetManager : MonoBehaviour {
         shader.SetBuffer (kernel, "magnetPositions", magnetPositionsBuffer);
         shader.SetBuffer (kernel, "magnetRotations", magnetRotationsBuffer);
         shader.SetBuffer (kernel, "magnetMoments", magnetMomentsBuffer);
-
+        
+        // ! Index Error is not here 
         // StartPoint Buffer 
         Vector3[] paths = new Vector3[spawns.Length * maxSteps];
         index = 0;
@@ -147,20 +149,41 @@ public class MagnetManager : MonoBehaviour {
         magnetMomentsBuffer.Release ();
 
         List<List<Vector3>> FinalPaths = new List<List<Vector3>> ();
-
+        // NOTE: Testing Code, Save 
+        List<Vector3> _temp = new List<Vector3> ();
+        _temp.Add(new Vector3(0,0,0));
+        _temp.Add(new Vector3(0,5,0));
+        FinalPaths.Add(_temp);
+       
+        // ! Index Error maybe here 
         for (int i = 0; i < paths.Length; i += maxSteps) {
             List<Vector3> temp = new List<Vector3> ();
-            for (int j = 0; i < maxSteps; j++) {
-                // NOTE: Look into why float3 can have a bool this may speed up conversion to list 
+            for (int j = 0; j < maxSteps; j++) {
+                // ? Look into why float3 can have a bool this may speed up conversion to list 
                 temp.Add (paths[i + j]);
+                Debug.Log((i,j));
             }
             FinalPaths.Add (temp);
         }
         return FinalPaths;
     }
 
-    void RenderCurvedPaths (List<List<Vector3>> paths) {
+    void RenderAvailablePaths (List<List<Vector3>> paths) {
+        int index = 0;
+        foreach (List<Vector3> path in paths) {
+            if (index==VirtualParticles.Length){break;}
+            GameObject Particle = VirtualParticles[index++];
+            Particle.GetComponent<LineRenderer> ().positionCount = 0;
+            foreach (Vector3 point in path) { // Iterate Across Points 
+                Particle.GetComponent<LineRenderer> ().positionCount++;
+                Particle.GetComponent<LineRenderer> ().SetPosition (Particle.GetComponent<LineRenderer> ().positionCount - 1, point);
+            }
+        }
+    }
+
+    void RenderParticlePaths (List<List<Vector3>> paths) {
         int _index = 0;
+        // * There must be a path for each particle 
         foreach (GameObject Particle in VirtualParticles) {
             Particle.GetComponent<LineRenderer> ().positionCount = 0;
             int point_num = 0;
@@ -175,10 +198,10 @@ public class MagnetManager : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-        if (SystemInfo.supportsComputeShaders) {
-            RenderCurvedPaths (CalculateParticlePaths_GPU (GetParticleSpawnPoints ()));
+        if (SystemInfo.supportsComputeShaders && use_gpu) {
+            RenderAvailablePaths (CalculateParticlePaths_GPU (GetParticleSpawnPoints ()));
         } else {
-            RenderCurvedPaths (CalculateParticlePaths_CPU (GetParticleSpawnPoints ()));
+            RenderParticlePaths (CalculateParticlePaths_CPU (GetParticleSpawnPoints ()));
         }
     }
 }
