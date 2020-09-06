@@ -68,8 +68,8 @@ using UnityEngine;
         public Vector3[] linePositions = new Vector3[0];
         // private Vector3[] linePositionsOld = new Vector3[0];
         private LineRenderer lineRenderer = null;
-        private Material lineRendererMaterial = new Material(Shader.Find("Sprites/Default"));
-        
+        private Material lineRendererMaterial;
+
         /// <summary>
         /// Collect control points positions and update the line renderer.
         /// </summary>
@@ -83,6 +83,7 @@ using UnityEngine;
         }
         private void Start() {
             lineRenderer = GetComponent<LineRenderer>();
+            lineRendererMaterial = new Material(Shader.Find("Sprites/Default"));
             positionCount = 0;
         }
         public void SetPosition(int index, Vector3 position){

@@ -1,6 +1,7 @@
 ﻿#pragma kernel ParticlePath
 
 float SegmentSize; // Distance between recorded points
+int MaxSteps;
 int MagnetCount;
 StructuredBuffer<float3> magnetPositions;
 StructuredBuffer<float4> magnetRotations;
@@ -40,7 +41,7 @@ void ParticlePath (uint3 id : SV_DispatchThreadID)
     int index = 0;
     // float3 _point = spawnPoints[id.x];//[0][0];
     // float3 last_point = _point;
-    while (step < 500){
+    while (step < MaxSteps){
         // float3 forces = float3(0,0,0);
         // for (int i = 0; i < MagnetCount; i++){
         //     MagnetState mag = magnetStates[i];
@@ -59,7 +60,8 @@ void ParticlePath (uint3 id : SV_DispatchThreadID)
         // } 
         // point_ += forces; // Apply Combined Force o. Magnets
         // if (step % 50 == 0){}
-        // spawnPoints[id.x + step] = float3(id.x,id.x,id.x) * step; //point_;last_point = point_;
+        
+        spawnPoints[id.x + step] = float3(id.x,id.x,id.x) * step; //point_;last_point = point_;
         step++;
     }
 }
