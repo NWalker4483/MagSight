@@ -4,6 +4,7 @@ using UnityEngine;
 //[ExecuteInEditMode]
 public class Magnet : MonoBehaviour
 {
+    private float last_moment = 1;
     [Range(0.05f,10.00f)]
     public float moment = 1;
     [Range(2,20)]
@@ -45,5 +46,9 @@ public class Magnet : MonoBehaviour
             EffectiveArea.radius = AreaOfEffect;
             Last_AOE = AreaOfEffect;
         }
+        // if (last_moment != moment){
+        //     transform.localScale = new Vector3(moment/2,moment/2,moment/2);
+        //     last_moment = moment;
+        // }
     }
 }

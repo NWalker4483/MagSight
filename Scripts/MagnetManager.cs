@@ -13,12 +13,12 @@ public class MagnetManager : MonoBehaviour
     public int maxSteps = 50;
     [Range(0.1f, 0.8f)]
     public float displacementPerPoint;
-    public bool use_gpu = true;
+    public bool useGpu = true;
 
     // Start is called before the first frame update
     void Start()
     {
-        if (SystemInfo.supportsComputeShaders && use_gpu)
+        if (SystemInfo.supportsComputeShaders && useGpu)
         {
             Debug.Log("Running on GPU");
         }
@@ -73,7 +73,8 @@ public class MagnetManager : MonoBehaviour
         {
             foreach (Vector3 point in points)
             {
-                Spawns.Add((Quaternion.Inverse(Magnet.transform.rotation) * point) + Magnet.transform.position);
+                // ? Correlate scale to spawn distance ik there is a better way though
+                Spawns.Add(((Magnet.transform.localScale.x / 2) * 1.1f) * (Quaternion.Inverse(Magnet.transform.rotation) * point) + Magnet.transform.position);
             }
         }
         return Spawns.ToArray();
@@ -107,11 +108,11 @@ public class MagnetManager : MonoBehaviour
                     temp += (mag.transform.rotation * (ot * _temp)); // mag.GetComponent<Magnet>().CalculateB_Field(point);
                 }
                 point += temp;
-                if ((last_point - point).magnitude >= displacementPerPoint){ // * To prevent renderind too many points we set a minimum displacement 
+                if ((last_point - point).magnitude >= displacementPerPoint)
+                { // * To prevent renderind too many points we set a minimum displacement 
                     Path.Add(point);
                     last_point = point;
                 }
-                    
                 step++;
             }
             Paths.Add(Path);
@@ -123,12 +124,13 @@ public class MagnetManager : MonoBehaviour
     {
         return new Vector4(quat.x, quat.y, quat.z, quat.w);
     }
-List<List<Vector3>> CalculateParticlePaths_GPU(Vector3[] spawns)
+    List<List<Vector3>> CalculateParticlePaths_GPU(Vector3[] spawns)
     { // Run Compute Shader    
       // Get kernel ID, probably 0 
         int kernel = shader.FindKernel("ParticlePath");
 
         shader.SetInt("MaxSteps", maxSteps);
+        shader.SetFloat("DisplacementPerPoint", displacementPerPoint);
         // Group Magnet States into buffers to send to the GPU
         shader.SetInt("MagnetCount", Magnets.Length);
         Vector3[] magnetPositions = new Vector3[Magnets.Length];
@@ -156,30 +158,22 @@ List<List<Vector3>> CalculateParticlePaths_GPU(Vector3[] spawns)
         shader.SetBuffer(kernel, "magnetMoments", magnetMomentsBuffer);
 
         // StartPoint Buffer 
+        ComputeBuffer spawnPointBuffer = new ComputeBuffer(spawns.Length, 12);// Number of points , byte size of points, Max Path Length 
+        spawnPointBuffer.SetData(spawns);
+        shader.SetBuffer(kernel, "spawnPoints", spawnPointBuffer);
+
         Vector3[] paths = new Vector3[spawns.Length * maxSteps];
-        index = 0;
-        for (int i = 0; i < paths.Length; i += 1)
-        {
-            if (i % maxSteps == 0)
-            {
-                paths[i] = spawns[index++];
-            }
-            else
-            {
-                // ! Only here cause I think it'll prevent the crashing 
-                paths[i] = new Vector3(-1, -1, -1);
-            }
-        }
-        ComputeBuffer spawnPointBuffer = new ComputeBuffer(spawns.Length, spawns.Length * 12 * maxSteps);// Number of points , byte size of points, Max Path Length 
-        spawnPointBuffer.SetData(paths);
-        shader.SetBuffer(kernel, "paths", spawnPointBuffer);
+        ComputeBuffer finalPathsBuffer = new ComputeBuffer(spawns.Length, spawns.Length * 12 * maxSteps);// Number of points , byte size of points, Max Path Length 
+        finalPathsBuffer.SetData(paths);
+        shader.SetBuffer(kernel, "paths", finalPathsBuffer);
 
         // Run compute shader
-        shader.Dispatch(kernel, paths.Length, 1, 1);
-        spawnPointBuffer.GetData(paths);
+        shader.Dispatch(kernel, spawns.Length, 1, 1);
+        finalPathsBuffer.GetData(paths);
 
         // Release buffers
         spawnPointBuffer.Release();
+        finalPathsBuffer.Release();
         magnetPositionsBuffer.Release();
         magnetRotationsBuffer.Release();
         magnetMomentsBuffer.Release();
@@ -236,13 +230,17 @@ List<List<Vector3>> CalculateParticlePaths_GPU(Vector3[] spawns)
     // Update is called once per frame
     void Update()
     {
-        if (SystemInfo.supportsComputeShaders && use_gpu)
+        if (SystemInfo.supportsComputeShaders && useGpu)
         {
-            RenderAvailablePaths(CalculateParticlePaths_GPU(GetParticleSpawnPoints()));
+            RenderParticlePaths(
+                CalculateParticlePaths_GPU(GetParticleSpawnPoints())
+                );
         }
         else
         {
-            RenderParticlePaths(CalculateParticlePaths_CPU(GetParticleSpawnPoints()));
+            RenderParticlePaths(
+                CalculateParticlePaths_CPU(GetParticleSpawnPoints())
+                );
         }
     }
 }

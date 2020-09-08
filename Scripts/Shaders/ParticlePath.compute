@@ -1,17 +1,22 @@
 ﻿#pragma kernel ParticlePath
 
-float SegmentSize; // Distance between recorded points
+float DisplacementPerPoint; // Distance between recorded points
 int MaxSteps;
 int MagnetCount;
 StructuredBuffer<float3> magnetPositions;
 StructuredBuffer<float4> magnetRotations;
 StructuredBuffer<float> magnetMoments;
+struct MagnetState {
+    float3 position;
+    float4 rotation;
+    float moment;
+};
 
-RWStructuredBuffer<float3> spawnPoints;
-
+StructuredBuffer<float3> spawnPoints;
 RWStructuredBuffer<float3> paths;
-float magnitude(float3 vec){}
 
+float magnitude(float3 vec){
+    return pow(pow(vec.x,2)+pow(vec.y,2)+pow(vec.z,2),.5);}
 // https://answers.unity.com/questions/372371/multiply-quaternion-by-vector3-how-is-done.html
 float3 rotateby(float4 quat, float3 vec){
      float num = quat.x * 2.;
@@ -32,6 +37,7 @@ float3 rotateby(float4 quat, float3 vec){
      result.z = (num8 - num11) * vec.x + (num9 + num10) * vec.y + (1. - (num4 + num5)) * vec.z;
      return result;}
 
+// ! Not Done 
 float4 inverse(float4 quat){return quat;}
 
 [numthreads(1024,1,1)]
@@ -39,29 +45,36 @@ void ParticlePath (uint3 id : SV_DispatchThreadID)
 {
     int step = 0; 
     int index = 0;
-    // float3 _point = spawnPoints[id.x];//[0][0];
-    // float3 last_point = _point;
+    float3 _point = spawnPoints[id.x];
+    float3 last_point = _point;
     while (step < MaxSteps){
-        // float3 forces = float3(0,0,0);
-        // for (int i = 0; i < MagnetCount; i++){
-        //     MagnetState mag = magnetStates[i];
-        //     if((mag.position - point_).magnitude < 1){
-        //         break;
-        //     }        
-        //     // Reverse Rotation o. the Magnet    
-        //     float3 place = point_ - mag.position;
-        //     place = rotateby(inverse(mag.rotation), place);
-        //     // Math Function 
-        //     float3 temp = float3(3*place.z*place.x,3*place.z*place.y,2*pow(place.z,2) - pow(place.x,2) - pow(place.y,2));
-        //     float ot = (mag.moment/(4*3.1495*pow(place.magnitude,5)));
-        //     // I figured out that notation quaternion * vector uses overloaded multiply operator 
-        //     // which incapsulate mathematical multiplying quaternion * vector * quaternion^(-1)
-        //     forces += rotateby(mag.rotation, mul(ot, temp)); 
-        // } 
-        // point_ += forces; // Apply Combined Force o. Magnets
-        // if (step % 50 == 0){}
-        
-        spawnPoints[id.x + step] = float3(id.x,id.x,id.x) * step; //point_;last_point = point_;
-        step++;
-    }
+         float3 forces = float3(0,0,0);
+        for (int i = 0; i < MagnetCount; i++){
+            MagnetState mag;
+            mag.position = magnetPositions[i];
+            mag.rotation = magnetRotations[i];
+            mag.moment = magnetMoments[i];
+            if(distance(mag.position, _point) < 1){
+                break;
+            }        
+            // Reverse Rotation o. the Magnet    
+            float3 place = _point - mag.position;
+            place = rotateby(inverse(mag.rotation), place);
+            // Math Function 
+            float3 temp = float3(3*place.z*place.x,3*place.z*place.y,2*pow(place.z,2) - pow(place.x,2) - pow(place.y,2));
+            float ot = (mag.moment/(4*3.1495*pow(magnitude(place),5)));
+            // I figured out that notation quaternion * vector uses overloaded multiply operator 
+            // which incapsulate mathematical multiplying quaternion * vector * quaternion^(-1)
+            forces += rotateby(mag.rotation, mul(ot, temp)); 
+         }
+
+        _point += forces; // Apply Combined Force o. Magnets  
+        if (distance(last_point, _point) >= DisplacementPerPoint)
+            { // * To prevent renderind too many points we set a minimum displacement 
+                paths[(MaxSteps * id.x) + index++] = _point; 
+                last_point = _point;
+            }
+        //paths[(MaxSteps * id.x) + index++] = _point_;
+       step++;
+     }
 }
